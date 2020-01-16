@@ -76,6 +76,7 @@ export interface IstioConfigList {
 }
 
 export const dicIstioType = {
+  hellostring: 'helloString',
   Sidecar: 'sidecars',
   Gateway: 'gateways',
   VirtualService: 'virtualservices',
