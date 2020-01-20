@@ -117,6 +117,7 @@ const istioType: ResourceType<IstioConfigItem> = {
 
 export const IstioTypes = {
   gateway: { name: 'Gateway', url: 'gateways', icon: 'G' },
+  hellostring: { name: 'HelloString', url: 'helloString', icon: 'HHH' },
   virtualservice: { name: 'VirtualService', url: 'virtualservices', icon: 'VS' },
   destinationrule: { name: 'DestinationRule', url: 'destinationrules', icon: 'DR' },
   serviceentry: { name: 'ServiceEntry', url: 'serviceentries', icon: 'SE' },

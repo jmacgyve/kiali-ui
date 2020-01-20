@@ -91,6 +91,10 @@ export const istioTypeFilter: FilterType = {
   action: FILTER_ACTION_APPEND,
   filterValues: [
     {
+      id: 'HelloString',
+      title: 'HelloString'
+    },
+    {
       id: 'Adapter',
       title: 'Adapter'
     },
