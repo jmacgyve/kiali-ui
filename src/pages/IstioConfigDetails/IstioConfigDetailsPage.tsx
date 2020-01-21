@@ -15,6 +15,7 @@ import { default as IstioActionButtonsContainer } from '../../components/IstioAc
 import BreadcrumbView from '../../components/BreadcrumbView/BreadcrumbView';
 import VirtualServiceDetail from './IstioObjectDetails/VirtualServiceDetail';
 import DestinationRuleDetail from './IstioObjectDetails/DestinationRuleDetail';
+import AdapterDetail from './IstioObjectDetails/AdapterDetail';
 import history from '../../app/History';
 import { Paths, serverConfig } from '../../config';
 import { MessageType } from '../../types/MessageCenter';
@@ -57,6 +58,7 @@ const rightToolbarStyle = style({
 });
 
 interface IstioConfigDetailsState {
+  adapterDetails?: IstioConfigDetails;
   istioObjectDetails?: IstioConfigDetails;
   istioValidations?: ObjectValidation;
   originalIstioObjectDetails?: IstioConfigDetails;
@@ -115,7 +117,8 @@ class IstioConfigDetailsPage extends React.Component<RouteComponentProps<IstioCo
   }
 
   defaultTab() {
-    return this.hasOverview() ? 'overview' : 'yaml';
+    return 'overview';
+    //return this.hasOverview() ? 'overview' : 'yaml';
   }
 
   objectTitle() {
@@ -151,7 +154,7 @@ class IstioConfigDetailsPage extends React.Component<RouteComponentProps<IstioCo
           originalIstioValidations: resultConfigDetails.data.validation,
           isModified: false,
           yamlModified: '',
-          currentTab: activeTab(tabName, this.defaultTab())
+          currentTab: activeTab(tabName, 'overview')
         });
       })
       .catch(error => {
@@ -439,6 +442,7 @@ class IstioConfigDetailsPage extends React.Component<RouteComponentProps<IstioCo
     return (
       this.props.match.params.objectType === 'virtualservices' ||
       this.props.match.params.objectType === 'destinationrules'
+      //|| this.props.match.params.objectType === 'adapter'
     );
   };
 
@@ -457,6 +461,15 @@ class IstioConfigDetailsPage extends React.Component<RouteComponentProps<IstioCo
         return (
           <DestinationRuleDetail
             destinationRule={this.state.istioObjectDetails.destinationRule}
+            validation={this.state.istioValidations}
+            namespace={this.state.istioObjectDetails.namespace.name}
+          />
+        );
+      }
+      if (this.state.istioObjectDetails.adapter) {
+        return (
+          <AdapterDetail
+            istioAdapter={this.state.istioObjectDetails.adapter}
             validation={this.state.istioValidations}
             namespace={this.state.istioObjectDetails.namespace.name}
           />
@@ -482,13 +495,19 @@ class IstioConfigDetailsPage extends React.Component<RouteComponentProps<IstioCo
 
   renderTabs = (): any => {
     const tabs: JSX.Element[] = [];
-    if (this.hasOverview()) {
-      tabs.push(
-        <Tab key="istio-overview" title="Overview" eventKey={0}>
-          <RenderComponentScroll>{this.renderOverview()}</RenderComponentScroll>
-        </Tab>
-      );
-    }
+    // if (this.hasOverview()) {
+    //   tabs.push(
+    //     <Tab key="istio-overview" title="Overview" eventKey={0}>
+    //       <RenderComponentScroll>{this.renderOverview()}</RenderComponentScroll>
+    //     </Tab>
+    //   );
+    // }
+
+    tabs.push(
+      <Tab key="istio-overview" title="Overview" eventKey={0}>
+        <RenderComponentScroll>{this.renderOverview()}</RenderComponentScroll>
+      </Tab>
+    );
 
     tabs.push(
       <Tab key="istio-yaml" title={`YAML ${this.state.isModified ? ' * ' : ''}`} eventKey={1}>
