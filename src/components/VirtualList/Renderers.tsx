@@ -155,3 +155,13 @@ export const configuration: Renderer<ServiceListItem | IstioConfigItem> = (
     </td>
   );
 };
+
+export const configuration2: Renderer<ServiceListItem | IstioConfigItem> = (
+  item: ServiceListItem | IstioConfigItem
+) => {
+  return (
+    <td role="gridcell" key={'VirtuaItem_Conf_' + item.namespace + '_' + item.name}>
+      validation : (<>CheckNewconfiguration2</>)
+    </td>
+  );
+};

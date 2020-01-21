@@ -91,6 +91,14 @@ const configuration: ResourceType<ServiceListItem | IstioConfigItem> = {
   renderer: Renderers.configuration
 };
 
+const configuration2: ResourceType<ServiceListItem | IstioConfigItem> = {
+  name: 'Configuration2',
+  param: 'cv2',
+  column: 'Configuration2',
+  transforms: [sortable],
+  renderer: Renderers.configuration2
+};
+
 const labelValidation: ResourceType<WorkloadListItem> = {
   name: 'LabelValidation',
   param: 'lb',
@@ -165,7 +173,8 @@ const services: Resource = {
 
 const istio: Resource = {
   name: 'istio',
-  columns: [istioItem, namespace, istioType, configuration]
+  columns: [istioItem, namespace, istioType, configuration2]
+  //columns: [istioItem, namespace, istioType, configuration]
 };
 
 const conf = {
