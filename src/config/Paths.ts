@@ -8,5 +8,6 @@ export enum Paths {
   JAEGER = 'jaeger',
   SERVICES = 'services',
   SERVICEENTRIES = 'istio/serviceentries',
-  WORKLOADS = 'workloads'
+  WORKLOADS = 'workloads',
+  ACCESS = 'access'
 }

@@ -156,9 +156,19 @@ export const configuration: Renderer<ServiceListItem | IstioConfigItem> = (
   );
 };
 
+//новый класс для проверки таблицы во вкладке Istio Config
+//TODO убрать этот класс
 export const configuration2: Renderer<ServiceListItem | IstioConfigItem> = (
   item: ServiceListItem | IstioConfigItem
 ) => {
+  return (
+    <td role="gridcell" key={'VirtuaItem_Conf_' + item.namespace + '_' + item.name}>
+      validation : (<>CheckNewconfiguration2</>)
+    </td>
+  );
+};
+
+export const accesPage: Renderer<ServiceListItem | IstioConfigItem> = (item: ServiceListItem | IstioConfigItem) => {
   return (
     <td role="gridcell" key={'VirtuaItem_Conf_' + item.namespace + '_' + item.name}>
       validation : (<>CheckNewconfiguration2</>)
