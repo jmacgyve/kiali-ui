@@ -145,6 +145,24 @@ export type Resource = {
   icon?: string;
 };
 
+//новый класс для проверки таблицы во вкладке Istio Config
+//TODO убрать этот класс
+const configuration2: ResourceType<ServiceListItem | IstioConfigItem> = {
+  name: 'Configuration2',
+  param: 'cv2',
+  column: 'Configuration2',
+  transforms: [sortable],
+  renderer: Renderers.configuration2
+};
+
+const accesPage: ResourceType<ServiceListItem | IstioConfigItem> = {
+  name: 'Access',
+  param: 'acc',
+  column: 'Access',
+  transforms: [sortable],
+  renderer: Renderers.accesPage
+};
+
 const workloads: Resource = {
   name: 'workloads',
   columns: [item, namespace, workloadType, health, details, labelValidation],
@@ -159,13 +177,20 @@ const applications: Resource = {
 
 const services: Resource = {
   name: 'services',
+  // columns: [serviceItem, namespace, health, details],
   columns: [serviceItem, namespace, health, details, configuration],
   icon: 'S'
 };
 
 const istio: Resource = {
   name: 'istio',
-  columns: [istioItem, namespace, istioType, configuration]
+  columns: [istioItem, namespace, istioType, configuration2]
+  //columns: [istioItem, namespace, istioType, configuration]
+};
+
+const access: Resource = {
+  name: 'access',
+  columns: [accesPage]
 };
 
 const conf = {
@@ -173,7 +198,8 @@ const conf = {
   applications: applications,
   workloads: workloads,
   services: services,
-  istio: istio
+  istio: istio,
+  access: access
 };
 
 export const config = deepFreeze(conf) as typeof conf;

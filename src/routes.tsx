@@ -12,6 +12,7 @@ import GraphPageContainer from './pages/Graph/GraphPage';
 import { icons, Paths } from './config';
 import ServiceDetailsPageContainer from './pages/ServiceDetails/ServiceDetailsPage';
 import DefaultSecondaryMasthead from './components/DefaultSecondaryMasthead/DefaultSecondaryMasthead';
+import AccessListPage from './pages/Access/AccessListPage';
 
 /**
  * Return array of objects that describe vertical menu
@@ -53,6 +54,12 @@ const navItems: MenuItem[] = [
     title: 'Istio Config',
     to: '/' + Paths.ISTIO,
     pathsActive: [new RegExp('^/namespaces/(.*)/' + Paths.ISTIO + '/(.*)')]
+  },
+  {
+    iconClass: icons.menu.accessB,
+    title: 'Access Page Beta',
+    to: '/access',
+    pathsActive: [new RegExp('^/namespaces/(.*)/' + Paths.ACCESS + '/(.*)')]
   },
   {
     iconClass: icons.menu.distributedTracing,
@@ -118,6 +125,14 @@ const pathRoutes: Path[] = [
     component: WorkloadListPage
   },
   {
+    path: '/' + Paths.ACCESS,
+    component: AccessListPage
+  },
+  // {
+  //   path: '/namespaces/:namespace/' + Paths.ACCESS + '/:app',
+  //   component: AccessListPageDetails
+  // },
+  {
     path: '/namespaces/:namespace/' + Paths.WORKLOADS + '/:workload',
     component: WorkloadDetailsPage
   },
@@ -154,6 +169,10 @@ const secondaryMastheadRoutes: Path[] = [
   },
   {
     path: '/' + Paths.JAEGER,
+    component: DefaultSecondaryMasthead
+  },
+  {
+    path: '/' + Paths.ACCESS,
     component: DefaultSecondaryMasthead
   }
 ];

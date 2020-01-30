@@ -1,6 +1,6 @@
 import * as React from 'react';
-import * as FilterHelper from '../../components/FilterList/FilterHelper';
 import { RenderContent } from '../../components/Nav/Page';
+import * as FilterHelper from '../../components/FilterList/FilterHelper';
 import WorkloadListContainer from './WorkloadListComponent';
 import * as WorkloadListFilters from './FiltersAndSorts';
 

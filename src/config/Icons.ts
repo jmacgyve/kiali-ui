@@ -22,6 +22,7 @@ const mutIcons = {
     virtualService: { className: 'fa fa-code-fork', type: 'fa', name: 'code-fork', ascii: '\uf126 ' }
   },
   menu: {
+    accessB: 'fa fa-tachometer',
     overview: 'fa fa-tachometer',
     graph: 'fa pficon-topology',
     applications: 'fa pficon-applications',
