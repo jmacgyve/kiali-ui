@@ -117,7 +117,7 @@ class IstioConfigDetailsPage extends React.Component<RouteComponentProps<IstioCo
   }
 
   defaultTab() {
-    return 'overview';
+    return 'yaml';
     //return this.hasOverview() ? 'overview' : 'yaml';
   }
 

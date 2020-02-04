@@ -12,6 +12,7 @@ import { AppListItem } from '../../types/AppList';
 import { ServiceListItem } from '../../types/ServiceList';
 import { ApiTypeIndicator } from '../ApiDocumentation/ApiTypeIndicator';
 import { Health } from '../../types/Health';
+import { K8sMetadata } from '../../types/IstioObjects';
 
 // Links
 
@@ -171,7 +172,15 @@ export const configuration2: Renderer<ServiceListItem | IstioConfigItem> = (
 export const accesPage: Renderer<ServiceListItem | IstioConfigItem> = (item: ServiceListItem | IstioConfigItem) => {
   return (
     <td role="gridcell" key={'VirtuaItem_Conf_' + item.namespace + '_' + item.name}>
-      validation : (<>CheckNewconfiguration2</>)
+      new Roles
+    </td>
+  );
+};
+
+export const accesPage2: Renderer<K8sMetadata> = (item: K8sMetadata) => {
+  return (
+    <td role="gridcell" key={item.name + '_' + item.namespace}>
+      Metadata.name --> {item.clusterName}
     </td>
   );
 };

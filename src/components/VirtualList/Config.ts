@@ -8,9 +8,16 @@ import { IstioConfigItem } from '../../types/IstioConfigList';
 import * as Renderers from './Renderers';
 import { Health } from '../../types/Health';
 import { isIstioNamespace } from 'config/ServerConfig';
+import { AccessRuleConstraint, ClusterRbacConfigSpec, K8sMetadata, Reference } from '../../types/IstioObjects';
 
 export type SortResource = AppListItem | WorkloadListItem | ServiceListItem;
-export type TResource = SortResource | IstioConfigItem;
+export type TResource =
+  | SortResource
+  | IstioConfigItem
+  | Reference
+  | AccessRuleConstraint
+  | ClusterRbacConfigSpec
+  | K8sMetadata;
 export type Renderer<R extends TResource> = (
   item: R,
   config: Resource,
@@ -163,6 +170,14 @@ const accesPage: ResourceType<ServiceListItem | IstioConfigItem> = {
   renderer: Renderers.accesPage
 };
 
+const accesPage2: ResourceType<K8sMetadata> = {
+  name: 'Access2',
+  param: 'acc2',
+  column: 'Access2',
+  transforms: [sortable],
+  renderer: Renderers.accesPage2
+};
+
 const workloads: Resource = {
   name: 'workloads',
   columns: [item, namespace, workloadType, health, details, labelValidation],
@@ -190,7 +205,7 @@ const istio: Resource = {
 
 const access: Resource = {
   name: 'access',
-  columns: [accesPage]
+  columns: [accesPage, namespace, accesPage2]
 };
 
 const conf = {

@@ -1,5 +1,6 @@
 import Namespace from './Namespace';
 import { ResourcePermissions } from './Permissions';
+import { ServiceHealth } from './Health';
 
 // Common types
 
@@ -73,6 +74,10 @@ export interface ObjectReference {
 }
 
 export interface Reference {
+  healthPromise: Promise<ServiceHealth>;
+  istioSidecar: boolean;
+  namespace: string;
+  type: string;
   name: string;
   kind: string;
 }
@@ -585,6 +590,9 @@ export interface ServiceMeshRbacConfig extends IstioObject {
 }
 
 export interface ClusterRbacConfigSpec {
+  namespace: string;
+  type: string;
+  name: string;
   mode?: string;
   inclusion?: ClusterRbacConfigTarget;
   exclusion?: ClusterRbacConfigTarget;
@@ -600,6 +608,9 @@ export interface RbacConfig extends IstioObject {
 }
 
 export interface RbacConfigSpec {
+  namespace: string;
+  type: string;
+  name: string;
   mode?: string;
   inclusion?: RbacConfigTarget;
   exclusion?: RbacConfigTarget;
@@ -665,9 +676,15 @@ export interface AccessRules {
   path: string[];
   methods: string[];
   constraints: AccessRuleConstraint;
+  namespace: string;
+  type: string;
+  name: string;
 }
 
 export interface AccessRuleConstraint {
+  type: string;
+  name: string;
+  namespace: string;
   key: string;
   values: string[];
 }
@@ -677,11 +694,17 @@ export interface ServiceRoleBinding extends IstioObject {
 }
 
 export interface ServiceRoleBindingSpec {
+  namespace: string;
+  type: string;
+  name: string;
   subjects?: ServiceRoleBindingSubject[];
   roleRef?: Reference;
 }
 
 export interface ServiceRoleBindingSubject {
+  namespace: string;
+  type: string;
+  name: string;
   user: string;
   properties: Map<string, string>;
 }
