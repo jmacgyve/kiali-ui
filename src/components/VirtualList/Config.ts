@@ -8,9 +8,16 @@ import { IstioConfigItem } from '../../types/IstioConfigList';
 import * as Renderers from './Renderers';
 import { Health } from '../../types/Health';
 import { isIstioNamespace } from 'config/ServerConfig';
+import { AccessRuleConstraint, ClusterRbacConfigSpec, K8sMetadata, Reference } from '../../types/IstioObjects';
 
 export type SortResource = AppListItem | WorkloadListItem | ServiceListItem;
-export type TResource = SortResource | IstioConfigItem;
+export type TResource =
+  | SortResource
+  | IstioConfigItem
+  | Reference
+  | AccessRuleConstraint
+  | ClusterRbacConfigSpec
+  | K8sMetadata;
 export type Renderer<R extends TResource> = (
   item: R,
   config: Resource,
@@ -57,6 +64,14 @@ const istioItem: ResourceType<IstioConfigItem> = {
   column: 'Name',
   transforms: [sortable],
   renderer: Renderers.item
+};
+
+const accessItem: ResourceType<IstioConfigItem> = {
+  name: 'Item',
+  param: 'in',
+  column: 'Name',
+  transforms: [sortable],
+  renderer: Renderers.accessItem
 };
 
 const namespace: ResourceType<TResource> = {
@@ -155,14 +170,6 @@ const configuration2: ResourceType<ServiceListItem | IstioConfigItem> = {
   renderer: Renderers.configuration2
 };
 
-const accesPage: ResourceType<ServiceListItem | IstioConfigItem> = {
-  name: 'Access',
-  param: 'acc',
-  column: 'Access',
-  transforms: [sortable],
-  renderer: Renderers.accesPage
-};
-
 const workloads: Resource = {
   name: 'workloads',
   columns: [item, namespace, workloadType, health, details, labelValidation],
@@ -190,7 +197,7 @@ const istio: Resource = {
 
 const access: Resource = {
   name: 'access',
-  columns: [accesPage]
+  columns: [accessItem, namespace, istioType]
 };
 
 const conf = {

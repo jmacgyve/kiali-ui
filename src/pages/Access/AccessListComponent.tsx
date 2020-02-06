@@ -1,41 +1,42 @@
-import { connect } from 'react-redux';
-import { KialiAppState } from '../../store/Store';
-import { activeNamespacesSelector, durationSelector } from '../../store/Selectors';
-import * as FilterComponent from '../../components/FilterList/FilterComponent';
-import { AccessListItem } from '../../types/Access';
-import { DurationInSeconds } from '../../types/Common';
-import Namespace from '../../types/Namespace';
-import { PromisesRegistry } from '../../utils/CancelablePromises';
-import { namespaceEquals } from '../../utils/Common';
-import { SortField } from '../../types/SortFilters';
-import * as AccessListFilters from './FiltersAndSorts';
-import { ActiveFilter } from '../../types/Filters';
-import { FilterSelected, StatefulFilters } from '../../components/Filters/StatefulFilters';
-import * as API from '../../services/Api';
-import * as AccessClass from './AccessClass';
-import * as AccessFilters from './FiltersAndSorts';
-import { VirtualList } from '../../components/VirtualList/VirtualList';
-import { DurationDropdownContainer } from '../../components/DurationDropdown/DurationDropdown';
-import RefreshButtonContainer from '../../components/Refresh/RefreshButton';
 import * as React from 'react';
+import { connect } from 'react-redux';
+import { FilterSelected, StatefulFilters } from '../../components/Filters/StatefulFilters';
+import { ActiveFilter } from '../../types/Filters';
+import * as API from '../../services/Api';
+import Namespace from '../../types/Namespace';
+import {
+  dicIstioType,
+  filterByConfigValidation,
+  filterByName,
+  IstioConfigItem,
+  toIstioItems
+} from '../../types/IstioConfigList';
+import { PromisesRegistry } from '../../utils/CancelablePromises';
+import * as IstioConfigListFilters from './FiltersAndSorts';
+import * as FilterComponent from '../../components/FilterList/FilterComponent';
+import { SortField } from '../../types/SortFilters';
+import { getFilterSelectedValues } from '../../components/Filters/CommonFilters';
+import { namespaceEquals } from '../../utils/Common';
+import { KialiAppState } from '../../store/Store';
+import { activeNamespacesSelector } from '../../store/Selectors';
+import RefreshButtonContainer from '../../components/Refresh/RefreshButton';
+import { VirtualList } from '../../components/VirtualList/VirtualList';
+import { showInMessageCenter } from '../../utils/IstioValidationUtils';
+import { ObjectValidation } from '../../types/IstioObjects';
 
-type AccessListComponentState = FilterComponent.State<AccessListItem>;
-
-type ReduxProps = {
-  duration: DurationInSeconds;
+interface IstioConfigListComponentState extends FilterComponent.State<IstioConfigItem> {}
+interface IstioConfigListComponentProps extends FilterComponent.Props<IstioConfigItem> {
   activeNamespaces: Namespace[];
-};
-
-type AccessListComponentProps = ReduxProps & FilterComponent.Props<AccessListItem>;
+}
 
 class AccessListComponent extends FilterComponent.Component<
-  AccessListComponentProps,
-  AccessListComponentState,
-  AccessListItem
+  IstioConfigListComponentProps,
+  IstioConfigListComponentState,
+  IstioConfigItem
 > {
   private promises = new PromisesRegistry();
 
-  constructor(props: AccessListComponentProps) {
+  constructor(props: IstioConfigListComponentProps) {
     super(props);
     this.state = {
       listItems: [],
@@ -48,13 +49,18 @@ class AccessListComponent extends FilterComponent.Component<
     this.updateListItems();
   }
 
-  componentDidUpdate(prevProps: AccessListComponentProps, _prevState: AccessListComponentState, _snapshot: any) {
+  componentDidUpdate(
+    prevProps: IstioConfigListComponentProps,
+    _prevState: IstioConfigListComponentState,
+    _snapshot: any
+  ) {
     const [paramsSynced] = this.paramsAreSynced(prevProps);
     if (!paramsSynced) {
       this.setState({
         currentSortField: this.props.currentSortField,
         isSortAscending: this.props.isSortAscending
       });
+
       this.updateListItems();
     }
   }
@@ -63,26 +69,17 @@ class AccessListComponent extends FilterComponent.Component<
     this.promises.cancelAll();
   }
 
-  paramsAreSynced = (prevProps: AccessListComponentProps): [boolean, boolean] => {
+  paramsAreSynced = (prevProps: IstioConfigListComponentProps): [boolean, boolean] => {
     const activeNamespacesCompare = namespaceEquals(prevProps.activeNamespaces, this.props.activeNamespaces);
     const paramsSynced =
-      prevProps.duration === this.props.duration &&
       activeNamespacesCompare &&
       prevProps.isSortAscending === this.props.isSortAscending &&
       prevProps.currentSortField.title === this.props.currentSortField.title;
     return [paramsSynced, activeNamespacesCompare];
   };
 
-  sortItemList(
-    items: AccessListItem[],
-    sortField: SortField<AccessListItem>,
-    isAscending: boolean
-  ): Promise<AccessListItem[]> {
-    // Chain promises, as there may be an ongoing fetch/refresh and sort can be called after UI interaction
-    // This ensures that the list will display the new data with the right sorting
-    return this.promises.registerChained('sort', items, unsorted =>
-      AccessListFilters.sortAppsItems(unsorted, sortField, isAscending)
-    );
+  sortItemList(apps: IstioConfigItem[], sortField: SortField<IstioConfigItem>, isAscending: boolean) {
+    return IstioConfigListFilters.sortIstioItems(apps, sortField, isAscending);
   }
 
   updateListItems() {
@@ -90,13 +87,26 @@ class AccessListComponent extends FilterComponent.Component<
 
     const activeFilters: ActiveFilter[] = FilterSelected.getSelected();
     const namespacesSelected = this.props.activeNamespaces.map(item => item.name);
+    const istioTypeFilters = getFilterSelectedValues(IstioConfigListFilters.istioTypeFilter, activeFilters).map(
+      value => dicIstioType[value]
+    );
+    const istioNameFilters = getFilterSelectedValues(IstioConfigListFilters.istioNameFilter, activeFilters);
+    const configValidationFilters = getFilterSelectedValues(
+      IstioConfigListFilters.configValidationFilter,
+      activeFilters
+    );
 
     if (namespacesSelected.length === 0) {
       this.promises
         .register('namespaces', API.getNamespaces())
         .then(namespacesResponse => {
           const namespaces: Namespace[] = namespacesResponse.data;
-          this.fetchApps(namespaces.map(namespace => namespace.name), activeFilters, this.props.duration);
+          this.fetchConfigs(
+            namespaces.map(namespace => namespace.name),
+            istioTypeFilters,
+            istioNameFilters,
+            configValidationFilters
+          );
         })
         .catch(namespacesError => {
           if (!namespacesError.isCanceled) {
@@ -104,39 +114,55 @@ class AccessListComponent extends FilterComponent.Component<
           }
         });
     } else {
-      this.fetchApps(namespacesSelected, activeFilters, this.props.duration);
+      this.fetchConfigs(namespacesSelected, istioTypeFilters, istioNameFilters, configValidationFilters);
     }
   }
 
-  fetchApps(namespaces: string[], filters: ActiveFilter[], rateInterval: number) {
-    const appsPromises = namespaces.map(namespace => API.getApps(namespace));
-    this.promises
-      .registerAll('apps', appsPromises)
-      .then(responses => {
-        let appListItems: AccessListItem[] = [];
-        responses.forEach(response => {
-          appListItems = appListItems.concat(AccessClass.getAccessItems(response.data, rateInterval));
+  fetchConfigs(
+    namespaces: string[],
+    istioTypeFilters: string[],
+    istioNameFilters: string[],
+    configValidationFilters: string[]
+  ) {
+    const configsPromises = this.fetchIstioConfigs(namespaces, istioTypeFilters, istioNameFilters);
+
+    configsPromises
+      .then(items =>
+        items
+          .map(item => item.validation)
+          .filter((validation): validation is ObjectValidation => validation !== undefined)
+      )
+      .then(validations => showInMessageCenter(validations));
+
+    configsPromises
+      .then(items =>
+        IstioConfigListFilters.sortIstioItems(items, this.state.currentSortField, this.state.isSortAscending)
+      )
+      .then(configItems => filterByConfigValidation(configItems, configValidationFilters))
+      .then(sorted => {
+        // Update the view when data is fetched
+        this.setState({
+          listItems: sorted
         });
-        return AccessFilters.filterBy(appListItems, filters);
       })
-      .then(appListItems => {
-        this.promises.cancel('sort');
-        this.sortItemList(appListItems, this.state.currentSortField, this.state.isSortAscending)
-          .then(sorted => {
-            this.setState({
-              listItems: sorted
-            });
-          })
-          .catch(err => {
-            if (!err.isCanceled) {
-              console.debug(err);
-            }
-          });
-      })
-      .catch(err => {
-        if (!err.isCanceled) {
-          this.handleAxiosError('Could not fetch apps list', err);
+      .catch(istioError => {
+        console.log(istioError);
+        if (!istioError.isCanceled) {
+          this.handleAxiosError('Could not fetch Istio objects list', istioError);
         }
+      });
+  }
+
+  // Fetch the Istio configs, apply filters and map them into flattened list items
+  fetchIstioConfigs(namespaces: string[], typeFilters: string[], istioNameFilters: string[]) {
+    return this.promises
+      .registerAll('configs', namespaces.map(ns => API.getIstioConfig(ns, typeFilters, true)))
+      .then(responses => {
+        let istioItems: IstioConfigItem[] = [];
+        responses.forEach(response => {
+          istioItems = istioItems.concat(toIstioItems(filterByName(response.data, istioNameFilters)));
+        });
+        return istioItems;
       });
   }
 
@@ -144,12 +170,9 @@ class AccessListComponent extends FilterComponent.Component<
     return (
       <VirtualList rows={this.state.listItems} scrollFilters={false} updateItems={this.updateListItems}>
         <StatefulFilters
-          initialFilters={AccessFilters.availableFilters}
+          initialFilters={IstioConfigListFilters.availableFilters}
           onFilterChange={this.onFilterChange}
-          rightToolbar={[
-            <DurationDropdownContainer key={'DurationDropdown'} id="app-list-dropdown" />,
-            <RefreshButtonContainer key={'Refresh'} handleRefresh={this.updateListItems} />
-          ]}
+          rightToolbar={[<RefreshButtonContainer key={'Refresh'} handleRefresh={this.updateListItems} />]}
         />
       </VirtualList>
     );
@@ -157,8 +180,7 @@ class AccessListComponent extends FilterComponent.Component<
 }
 
 const mapStateToProps = (state: KialiAppState) => ({
-  activeNamespaces: activeNamespacesSelector(state),
-  duration: durationSelector(state)
+  activeNamespaces: activeNamespacesSelector(state)
 });
 
 const AccessListContainer = connect(mapStateToProps)(AccessListComponent);

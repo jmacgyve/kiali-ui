@@ -75,6 +75,36 @@ export const item: Renderer<TResource> = (item: TResource, config: Resource, ico
   );
 };
 
+export const accessItem: Renderer<TResource> = (item: TResource) => {
+  return (
+    <td role="gridcell" key={'VirtuaItem_Name_' + item.namespace + '_' + item.name}>
+      {item.name}
+    </td>
+  );
+};
+
+export const istioType: Renderer<IstioConfigItem> = (item: IstioConfigItem) => {
+  const type = item.type;
+  const object = IstioTypes[type];
+  return (
+    <td role="gridcell" key={'VirtuaItem_IstioType_' + item.namespace + '_' + item.name}>
+      {type === 'adapter' || type === 'template' ? `${object.name}: ${item[type]![type]}` : object.name}
+    </td>
+  );
+};
+
+export const accessNamespace: Renderer<IstioConfigItem> = (item: IstioConfigItem) => {
+  const type = item.name;
+  if (type === 'servicerole' || type === 'servicerolebinding') {
+    return (
+      <td role="gridcell" key={'VirtuaItem_Namespace_' + item.namespace + '_' + item.name}>
+        {item.namespace}
+      </td>
+    );
+  }
+  return;
+};
+
 export const namespace: Renderer<TResource> = (item: TResource) => {
   return (
     <td role="gridcell" key={'VirtuaItem_Namespace_' + item.namespace + '_' + item.name}>
@@ -127,16 +157,6 @@ export const workloadType: Renderer<WorkloadListItem> = (item: WorkloadListItem)
   );
 };
 
-export const istioType: Renderer<IstioConfigItem> = (item: IstioConfigItem) => {
-  const type = item.type;
-  const object = IstioTypes[type];
-  return (
-    <td role="gridcell" key={'VirtuaItem_IstioType_' + item.namespace + '_' + item.name}>
-      {type === 'adapter' || type === 'template' ? `${object.name}: ${item[type]![type]}` : object.name}
-    </td>
-  );
-};
-
 export const configuration: Renderer<ServiceListItem | IstioConfigItem> = (
   item: ServiceListItem | IstioConfigItem,
   config: Resource
@@ -161,14 +181,6 @@ export const configuration: Renderer<ServiceListItem | IstioConfigItem> = (
 export const configuration2: Renderer<ServiceListItem | IstioConfigItem> = (
   item: ServiceListItem | IstioConfigItem
 ) => {
-  return (
-    <td role="gridcell" key={'VirtuaItem_Conf_' + item.namespace + '_' + item.name}>
-      validation : (<>CheckNewconfiguration2</>)
-    </td>
-  );
-};
-
-export const accesPage: Renderer<ServiceListItem | IstioConfigItem> = (item: ServiceListItem | IstioConfigItem) => {
   return (
     <td role="gridcell" key={'VirtuaItem_Conf_' + item.namespace + '_' + item.name}>
       validation : (<>CheckNewconfiguration2</>)
