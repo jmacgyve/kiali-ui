@@ -66,6 +66,14 @@ const istioItem: ResourceType<IstioConfigItem> = {
   renderer: Renderers.item
 };
 
+const accessItem: ResourceType<IstioConfigItem> = {
+  name: 'Item',
+  param: 'in',
+  column: 'Name',
+  transforms: [sortable],
+  renderer: Renderers.accessItem
+};
+
 const namespace: ResourceType<TResource> = {
   name: 'Namespace',
   param: 'ns',
@@ -162,22 +170,6 @@ const configuration2: ResourceType<ServiceListItem | IstioConfigItem> = {
   renderer: Renderers.configuration2
 };
 
-const accesPage: ResourceType<ServiceListItem | IstioConfigItem> = {
-  name: 'Access',
-  param: 'acc',
-  column: 'Access',
-  transforms: [sortable],
-  renderer: Renderers.accesPage
-};
-
-const accesPage2: ResourceType<K8sMetadata> = {
-  name: 'Access2',
-  param: 'acc2',
-  column: 'Access2',
-  transforms: [sortable],
-  renderer: Renderers.accesPage2
-};
-
 const workloads: Resource = {
   name: 'workloads',
   columns: [item, namespace, workloadType, health, details, labelValidation],
@@ -205,7 +197,7 @@ const istio: Resource = {
 
 const access: Resource = {
   name: 'access',
-  columns: [accesPage, namespace, accesPage2]
+  columns: [accessItem, namespace, istioType]
 };
 
 const conf = {

@@ -12,7 +12,6 @@ import { AppListItem } from '../../types/AppList';
 import { ServiceListItem } from '../../types/ServiceList';
 import { ApiTypeIndicator } from '../ApiDocumentation/ApiTypeIndicator';
 import { Health } from '../../types/Health';
-import { K8sMetadata } from '../../types/IstioObjects';
 
 // Links
 
@@ -76,6 +75,36 @@ export const item: Renderer<TResource> = (item: TResource, config: Resource, ico
   );
 };
 
+export const accessItem: Renderer<TResource> = (item: TResource) => {
+  return (
+    <td role="gridcell" key={'VirtuaItem_Name_' + item.namespace + '_' + item.name}>
+      {item.name}
+    </td>
+  );
+};
+
+export const istioType: Renderer<IstioConfigItem> = (item: IstioConfigItem) => {
+  const type = item.type;
+  const object = IstioTypes[type];
+  return (
+    <td role="gridcell" key={'VirtuaItem_IstioType_' + item.namespace + '_' + item.name}>
+      {type === 'adapter' || type === 'template' ? `${object.name}: ${item[type]![type]}` : object.name}
+    </td>
+  );
+};
+
+export const accessNamespace: Renderer<IstioConfigItem> = (item: IstioConfigItem) => {
+  const type = item.name;
+  if (type === 'servicerole' || type === 'servicerolebinding') {
+    return (
+      <td role="gridcell" key={'VirtuaItem_Namespace_' + item.namespace + '_' + item.name}>
+        {item.namespace}
+      </td>
+    );
+  }
+  return;
+};
+
 export const namespace: Renderer<TResource> = (item: TResource) => {
   return (
     <td role="gridcell" key={'VirtuaItem_Namespace_' + item.namespace + '_' + item.name}>
@@ -128,16 +157,6 @@ export const workloadType: Renderer<WorkloadListItem> = (item: WorkloadListItem)
   );
 };
 
-export const istioType: Renderer<IstioConfigItem> = (item: IstioConfigItem) => {
-  const type = item.type;
-  const object = IstioTypes[type];
-  return (
-    <td role="gridcell" key={'VirtuaItem_IstioType_' + item.namespace + '_' + item.name}>
-      {type === 'adapter' || type === 'template' ? `${object.name}: ${item[type]![type]}` : object.name}
-    </td>
-  );
-};
-
 export const configuration: Renderer<ServiceListItem | IstioConfigItem> = (
   item: ServiceListItem | IstioConfigItem,
   config: Resource
@@ -165,22 +184,6 @@ export const configuration2: Renderer<ServiceListItem | IstioConfigItem> = (
   return (
     <td role="gridcell" key={'VirtuaItem_Conf_' + item.namespace + '_' + item.name}>
       validation : (<>CheckNewconfiguration2</>)
-    </td>
-  );
-};
-
-export const accesPage: Renderer<ServiceListItem | IstioConfigItem> = (item: ServiceListItem | IstioConfigItem) => {
-  return (
-    <td role="gridcell" key={'VirtuaItem_Conf_' + item.namespace + '_' + item.name}>
-      new Roles
-    </td>
-  );
-};
-
-export const accesPage2: Renderer<K8sMetadata> = (item: K8sMetadata) => {
-  return (
-    <td role="gridcell" key={item.name + '_' + item.namespace}>
-      Metadata.name --> {item.clusterName}
     </td>
   );
 };

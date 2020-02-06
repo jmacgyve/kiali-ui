@@ -1,77 +1,81 @@
-import { ActiveFilter, FILTER_ACTION_APPEND, FilterType } from '../../types/Filters';
-import { AccessListItem } from '../../types/Access';
-import { GenericSortField, HealthSortField } from '../../types/SortFilters';
-import { getRequestErrorsStatus, WithAppHealth } from '../../types/Health';
-import {
-  istioSidecarFilter,
-  healthFilter,
-  getPresenceFilterValue,
-  getFilterSelectedValues,
-  filterByHealth
-} from '../../components/Filters/CommonFilters';
-import { hasMissingSidecar } from '../../components/VirtualList/Config';
+import { SortField } from '../../types/SortFilters';
+import { IstioConfigItem } from '../../types/IstioConfigList';
+import { FILTER_ACTION_APPEND, FilterType } from '../../types/Filters';
 import { TextInputTypes } from '@patternfly/react-core';
 
-export const sortFields: GenericSortField<AccessListItem>[] = [
+export const getType = (item: IstioConfigItem): string => {
+  return item.type === 'adapter'
+    ? item.type + '_' + item.adapter!.adapter
+    : item.type === 'template'
+    ? item.type + '_' + item.template!.template
+    : item.type;
+};
+
+export const sortFields: SortField<IstioConfigItem>[] = [
   {
     id: 'namespace',
     title: 'Namespace',
     isNumeric: false,
     param: 'ns',
-    compare: (a, b) => {
-      let sortValue = a.namespace.localeCompare(b.namespace);
-      if (sortValue === 0) {
-        sortValue = a.name.localeCompare(b.name);
-      }
-      return sortValue;
+    compare: (a: IstioConfigItem, b: IstioConfigItem) => {
+      return a.namespace.localeCompare(b.namespace) || a.name.localeCompare(b.name);
     }
   },
   {
-    id: 'appname',
+    id: 'istiotype',
+    title: 'Istio Type',
+    isNumeric: false,
+    param: 'it',
+    compare: (a: IstioConfigItem, b: IstioConfigItem) => {
+      return getType(a).localeCompare(getType(b)) || a.name.localeCompare(b.name);
+    }
+  },
+  {
+    id: 'istioname',
     title: 'Name',
     isNumeric: false,
-    param: 'wn',
-    compare: (a, b) => a.name.localeCompare(b.name)
-  },
-  {
-    id: 'details',
-    title: 'Details',
-    isNumeric: false,
-    param: 'is',
-    compare: (a, b) => {
-      // First sort by missing sidecar
-      const aSC = hasMissingSidecar(a) ? 1 : 0;
-      const bSC = hasMissingSidecar(b) ? 1 : 0;
-      if (aSC !== bSC) {
-        return aSC - bSC;
-      }
-      // Finally by name
-      return a.name.localeCompare(b.name);
+    param: 'in',
+    compare: (a: IstioConfigItem, b: IstioConfigItem) => {
+      // On same name order is not well defined, we need some fallback methods
+      // This happens specially on adapters/templates where Istio 1.0.x calls them "handler"
+      // So, we have a lot of objects with same namespace+name
+      return (
+        a.name.localeCompare(b.name) || a.namespace.localeCompare(b.namespace) || getType(a).localeCompare(getType(b))
+      );
     }
   },
   {
-    id: 'health',
-    title: 'Health',
+    id: 'configvalidation',
+    title: 'Config',
     isNumeric: false,
-    param: 'he',
-    compare: (a: WithAppHealth<AccessListItem>, b: WithAppHealth<AccessListItem>) => {
-      const statusForA = a.health.getGlobalStatus();
-      const statusForB = b.health.getGlobalStatus();
-
-      if (statusForA.priority === statusForB.priority) {
-        // If both apps have same health status, use error rate to determine order.
-        const ratioA = getRequestErrorsStatus(a.health.requests.errorRatio).value;
-        const ratioB = getRequestErrorsStatus(b.health.requests.errorRatio).value;
-        return ratioA === ratioB ? a.name.localeCompare(b.name) : ratioB - ratioA;
+    param: 'cv',
+    compare: (a: IstioConfigItem, b: IstioConfigItem) => {
+      let sortValue = -1;
+      if (a.validation && !b.validation) {
+        sortValue = -1;
+      } else if (!a.validation && b.validation) {
+        sortValue = 1;
+      } else if (!a.validation && !b.validation) {
+        sortValue = 0;
+      } else if (a.validation && b.validation) {
+        if (a.validation.valid && !b.validation.valid) {
+          sortValue = -1;
+        } else if (!a.validation.valid && b.validation.valid) {
+          sortValue = 1;
+        } else if (a.validation.valid && b.validation.valid) {
+          sortValue = a.validation.checks.length - b.validation.checks.length;
+        } else if (!a.validation.valid && !b.validation.valid) {
+          sortValue = b.validation.checks.length - a.validation.checks.length;
+        }
       }
 
-      return statusForB.priority - statusForA.priority;
+      return sortValue || a.name.localeCompare(b.name);
     }
-  } as HealthSortField<AccessListItem>
+  }
 ];
 
-const appNameFilter: FilterType = {
-  id: 'appname',
+export const istioNameFilter: FilterType = {
+  id: 'istioname',
   title: 'Name',
   placeholder: 'Filter by Name',
   filterType: TextInputTypes.text,
@@ -79,71 +83,60 @@ const appNameFilter: FilterType = {
   filterValues: []
 };
 
-export const availableFilters: FilterType[] = [appNameFilter, istioSidecarFilter, healthFilter];
-
-/** Filter Method */
-
-const filterByName = (items: AccessListItem[], names: string[]): AccessListItem[] => {
-  return items.filter(item => {
-    let appNameFiltered = true;
-    if (names.length > 0) {
-      appNameFiltered = false;
-      for (let i = 0; i < names.length; i++) {
-        if (item.name.includes(names[i])) {
-          appNameFiltered = true;
-          break;
-        }
-      }
+export const istioTypeFilter: FilterType = {
+  id: 'istiotype',
+  title: 'Type',
+  placeholder: 'Filter by Type',
+  filterType: 'typeahead',
+  action: FILTER_ACTION_APPEND,
+  filterValues: [
+    {
+      id: 'ServiceRole',
+      title: 'ServiceRole'
+    },
+    {
+      id: 'ServiceRoleBinding',
+      title: 'ServiceRoleBinding'
     }
-    return appNameFiltered;
-  });
+  ]
 };
 
-const filterByIstioSidecar = (items: AccessListItem[], istioSidecar: boolean): AccessListItem[] => {
-  return items.filter(item => item.istioSidecar === istioSidecar);
+export const configValidationFilter: FilterType = {
+  id: 'configvalidation',
+  title: 'Config',
+  placeholder: 'Filter by Config Validation',
+  filterType: 'select',
+  action: FILTER_ACTION_APPEND,
+  filterValues: [
+    {
+      id: 'valid',
+      title: 'Valid'
+    },
+    {
+      id: 'warning',
+      title: 'Warning'
+    },
+    {
+      id: 'notvalid',
+      title: 'Not Valid'
+    },
+    {
+      id: 'notvalidated',
+      title: 'Not Validated'
+    }
+  ]
 };
 
-export const filterBy = (
-  appsList: AccessListItem[],
-  filters: ActiveFilter[]
-): Promise<AccessListItem[]> | AccessListItem[] => {
-  let ret = appsList;
-  const istioSidecar = getPresenceFilterValue(istioSidecarFilter, filters);
-  if (istioSidecar !== undefined) {
-    ret = filterByIstioSidecar(ret, istioSidecar);
-  }
+export const availableFilters: FilterType[] = [istioTypeFilter];
 
-  const appNamesSelected = getFilterSelectedValues(appNameFilter, filters);
-  if (appNamesSelected.length > 0) {
-    ret = filterByName(ret, appNamesSelected);
-  }
-
-  // We may have to perform a second round of filtering, using data fetched asynchronously (health)
-  // If not, exit fast
-  const healthSelected = getFilterSelectedValues(healthFilter, filters);
-  if (healthSelected.length > 0) {
-    return filterByHealth(ret, healthSelected);
-  }
-  return ret;
-};
-
-/** Sort Method */
-
-export const sortAppsItems = (
-  unsorted: AccessListItem[],
-  sortField: GenericSortField<AccessListItem>,
+export const sortIstioItems = (
+  unsorted: IstioConfigItem[],
+  sortField: SortField<IstioConfigItem>,
   isAscending: boolean
-): Promise<AccessListItem[]> => {
-  if (sortField.title === 'Health') {
-    // In the case of health sorting, we may not have all health promises ready yet
-    // So we need to get them all before actually sorting
-    const allHealthPromises: Promise<WithAppHealth<AccessListItem>>[] = unsorted.map(item => {
-      return item.healthPromise.then((health): WithAppHealth<AccessListItem> => ({ ...item, health }));
-    });
-    return Promise.all(allHealthPromises).then(arr => {
-      return arr.sort(isAscending ? sortField.compare : (a, b) => sortField.compare(b, a));
-    });
-  }
-  const sorted = unsorted.sort(isAscending ? sortField.compare : (a, b) => sortField.compare(b, a));
-  return Promise.resolve(sorted);
+) => {
+  const sortPromise: Promise<IstioConfigItem[]> = new Promise(resolve => {
+    resolve(unsorted.sort(isAscending ? sortField.compare : (a, b) => sortField.compare(b, a)));
+  });
+
+  return sortPromise;
 };
