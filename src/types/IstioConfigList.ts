@@ -50,6 +50,15 @@ export interface IstioConfigItem {
   validation?: ObjectValidation;
 }
 
+export interface IstioConfigItemAccess {
+  namespace: string;
+  type: string;
+  name: string;
+  serviceRole?: ServiceRole;
+  serviceRoleBinding?: ServiceRoleBinding;
+  validation?: ObjectValidation;
+}
+
 export interface IstioConfigList {
   namespace: Namespace;
   gateways: Gateway[];
@@ -75,6 +84,13 @@ export interface IstioConfigList {
   validations: Validations;
 }
 
+export interface IstioConfigListAccess {
+  namespace: Namespace;
+  serviceRoles: ServiceRole[];
+  serviceRoleBindings: ServiceRoleBinding[];
+  validations: Validations;
+}
+
 export const dicIstioType = {
   hellostring: 'helloString',
   Sidecar: 'sidecars',
@@ -96,6 +112,34 @@ export const dicIstioType = {
   ServiceRoleBinding: 'servicerolebindings',
   ServiceMeshPolicy: 'servicemeshpolicies',
   ServiceMeshRbacConfig: 'servicemeshrbacconfigs',
+  gateways: 'Gateway',
+  virtualservices: 'VirtualService',
+  destinationrules: 'DestinationRule',
+  serviceentries: 'ServiceEntry',
+  rules: 'Rule',
+  adapters: 'Adapter',
+  templates: 'Template',
+  quotaspecs: 'QuotaSpec',
+  quotaspecbindings: 'QuotaSpecBinding',
+  instance: 'Instance',
+  handler: 'Handler',
+  policies: 'Policy',
+  meshpolicies: 'MeshPolicy',
+  clusterrbacconfigs: 'ClusterRbacConfig',
+  rbacconfigs: 'RbacConfig',
+  authorizationpolicies: 'AuthorizationPolicy',
+  sidecars: 'Sidecar',
+  serviceroles: 'ServiceRole',
+  servicerolebindings: 'ServiceRoleBinding',
+  servicemeshpolicies: 'ServiceMeshPolicy',
+  servicemeshrbacconfigs: 'ServiceMeshRbacConfig'
+};
+
+export const dicIstioTypeAccess = {
+  // ServiceRole: 'serviceroles',
+  // ServiceRoleBinding: 'servicerolebindings',
+  // serviceroles: 'ServiceRole',
+  // servicerolebindings: 'ServiceRoleBinding',
   gateways: 'Gateway',
   virtualservices: 'VirtualService',
   destinationrules: 'DestinationRule',
@@ -164,11 +208,57 @@ export const filterByName = (unfiltered: IstioConfigList, names: string[]): Isti
   };
 };
 
+export const filterByNameAccess = (unfiltered: IstioConfigListAccess, names: string[]): IstioConfigListAccess => {
+  if (names && names.length === 0) {
+    return unfiltered;
+  }
+  return {
+    namespace: unfiltered.namespace,
+    serviceRoles: unfiltered.serviceRoles.filter(sr => includeName(sr.metadata.name, names)),
+    serviceRoleBindings: unfiltered.serviceRoleBindings.filter(srb => includeName(srb.metadata.name, names)),
+    validations: unfiltered.validations
+  };
+};
+
 export const filterByConfigValidation = (unfiltered: IstioConfigItem[], configFilters: string[]): IstioConfigItem[] => {
   if (configFilters && configFilters.length === 0) {
     return unfiltered;
   }
   const filtered: IstioConfigItem[] = [];
+
+  const filterByValid = configFilters.indexOf('Valid') > -1;
+  const filterByNotValid = configFilters.indexOf('Not Valid') > -1;
+  const filterByNotValidated = configFilters.indexOf('Not Validated') > -1;
+  const filterByWarning = configFilters.indexOf('Warning') > -1;
+  if (filterByValid && filterByNotValid && filterByNotValidated && filterByWarning) {
+    return unfiltered;
+  }
+
+  unfiltered.forEach(item => {
+    if (filterByValid && item.validation && item.validation.valid) {
+      filtered.push(item);
+    }
+    if (filterByNotValid && item.validation && !item.validation.valid) {
+      filtered.push(item);
+    }
+    if (filterByNotValidated && !item.validation) {
+      filtered.push(item);
+    }
+    if (filterByWarning && item.validation && item.validation.checks.filter(i => i.severity === 'warning').length > 0) {
+      filtered.push(item);
+    }
+  });
+  return filtered;
+};
+
+export const filterByConfigValidationAccess = (
+  unfiltered: IstioConfigItemAccess[],
+  configFilters: string[]
+): IstioConfigItemAccess[] => {
+  if (configFilters && configFilters.length === 0) {
+    return unfiltered;
+  }
+  const filtered: IstioConfigItemAccess[] = [];
 
   const filterByValid = configFilters.indexOf('Valid') > -1;
   const filterByNotValid = configFilters.indexOf('Not Valid') > -1;
@@ -226,6 +316,72 @@ export const toIstioItems = (istioConfigList: IstioConfigList): IstioConfigItem[
         name: entry.metadata.name,
         validation: hasValidations(typeName, entry.metadata.name)
           ? istioConfigList.validations[typeName][entry.metadata.name]
+          : undefined
+      };
+
+      item[entryName] = entry;
+      istioItems.push(item);
+    });
+  });
+
+  return istioItems;
+};
+
+export const toIstioItemsAccess = (istioConfigListAccess: IstioConfigListAccess): IstioConfigItemAccess[] => {
+  const istioItems: IstioConfigItemAccess[] = [];
+
+  const hasValidations = (type: string, name: string) =>
+    istioConfigListAccess.validations[type] && istioConfigListAccess.validations[type][name];
+
+  const nonItems = [
+    'validations',
+    'permissions',
+    'namespace',
+    'virtualservices',
+    'destinationrules',
+    'serviceentries',
+    'rules',
+    'adapters',
+    'templates',
+    'quotaspecs',
+    'quotaspecbindings',
+    'instance',
+    'handler',
+    'policies',
+    'meshpolicies',
+    'clusterrbacconfigs',
+    'rbacconfigs',
+    'authorizationpolicies',
+    'sidecars',
+    'servicemeshpolicies',
+    'servicemeshrbacconfigs',
+    'MeshPolicy'
+  ];
+
+  Object.keys(istioConfigListAccess).forEach(field => {
+    if (nonItems.indexOf(field) > -1) {
+      // These items do not belong to the IstioConfigItem[]
+      return;
+    }
+
+    const typeNameProto = dicIstioTypeAccess[field.toLowerCase()]; // ex. serviceEntries -> ServiceEntry
+    const typeName = typeNameProto.toLowerCase(); // ex. ServiceEntry -> serviceentry
+    const entryName = typeNameProto.charAt(0).toLowerCase() + typeNameProto.slice(1);
+
+    let entries = istioConfigListAccess[field];
+    if (!(entries instanceof Array)) {
+      // VirtualServices, DestinationRules
+      // entries = entries.items;
+      return;
+    }
+
+    entries.forEach(entry => {
+      const item = {
+        namespace: istioConfigListAccess.namespace.name,
+        type: typeName,
+        name: entry.metadata.name,
+        validation: hasValidations(typeName, entry.metadata.name)
+          ? istioConfigListAccess.validations[typeName][entry.metadata.name]
           : undefined
       };
 

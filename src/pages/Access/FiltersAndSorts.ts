@@ -1,23 +1,19 @@
 import { SortField } from '../../types/SortFilters';
-import { IstioConfigItem } from '../../types/IstioConfigList';
+import { IstioConfigItemAccess } from '../../types/IstioConfigList';
 import { FILTER_ACTION_APPEND, FilterType } from '../../types/Filters';
 import { TextInputTypes } from '@patternfly/react-core';
 
-export const getType = (item: IstioConfigItem): string => {
-  return item.type === 'adapter'
-    ? item.type + '_' + item.adapter!.adapter
-    : item.type === 'template'
-    ? item.type + '_' + item.template!.template
-    : item.type;
+export const getType = (item: IstioConfigItemAccess): string => {
+  return item.type;
 };
 
-export const sortFields: SortField<IstioConfigItem>[] = [
+export const sortFields: SortField<IstioConfigItemAccess>[] = [
   {
     id: 'namespace',
     title: 'Namespace',
     isNumeric: false,
     param: 'ns',
-    compare: (a: IstioConfigItem, b: IstioConfigItem) => {
+    compare: (a: IstioConfigItemAccess, b: IstioConfigItemAccess) => {
       return a.namespace.localeCompare(b.namespace) || a.name.localeCompare(b.name);
     }
   },
@@ -26,7 +22,7 @@ export const sortFields: SortField<IstioConfigItem>[] = [
     title: 'Istio Type',
     isNumeric: false,
     param: 'it',
-    compare: (a: IstioConfigItem, b: IstioConfigItem) => {
+    compare: (a: IstioConfigItemAccess, b: IstioConfigItemAccess) => {
       return getType(a).localeCompare(getType(b)) || a.name.localeCompare(b.name);
     }
   },
@@ -35,7 +31,7 @@ export const sortFields: SortField<IstioConfigItem>[] = [
     title: 'Name',
     isNumeric: false,
     param: 'in',
-    compare: (a: IstioConfigItem, b: IstioConfigItem) => {
+    compare: (a: IstioConfigItemAccess, b: IstioConfigItemAccess) => {
       // On same name order is not well defined, we need some fallback methods
       // This happens specially on adapters/templates where Istio 1.0.x calls them "handler"
       // So, we have a lot of objects with same namespace+name
@@ -49,7 +45,7 @@ export const sortFields: SortField<IstioConfigItem>[] = [
     title: 'Config',
     isNumeric: false,
     param: 'cv',
-    compare: (a: IstioConfigItem, b: IstioConfigItem) => {
+    compare: (a: IstioConfigItemAccess, b: IstioConfigItemAccess) => {
       let sortValue = -1;
       if (a.validation && !b.validation) {
         sortValue = -1;
@@ -130,11 +126,11 @@ export const configValidationFilter: FilterType = {
 export const availableFilters: FilterType[] = [istioTypeFilter];
 
 export const sortIstioItems = (
-  unsorted: IstioConfigItem[],
-  sortField: SortField<IstioConfigItem>,
+  unsorted: IstioConfigItemAccess[],
+  sortField: SortField<IstioConfigItemAccess>,
   isAscending: boolean
 ) => {
-  const sortPromise: Promise<IstioConfigItem[]> = new Promise(resolve => {
+  const sortPromise: Promise<IstioConfigItemAccess[]> = new Promise(resolve => {
     resolve(unsorted.sort(isAscending ? sortField.compare : (a, b) => sortField.compare(b, a)));
   });
 

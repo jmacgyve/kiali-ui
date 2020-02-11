@@ -13,6 +13,7 @@ import { icons, Paths } from './config';
 import ServiceDetailsPageContainer from './pages/ServiceDetails/ServiceDetailsPage';
 import DefaultSecondaryMasthead from './components/DefaultSecondaryMasthead/DefaultSecondaryMasthead';
 import AccessListPage from './pages/Access/AccessListPage';
+import AccessListComponent from './pages/Access/AccessListComponent';
 
 /**
  * Return array of objects that describe vertical menu
@@ -128,10 +129,10 @@ const pathRoutes: Path[] = [
     path: '/' + Paths.ACCESS,
     component: AccessListPage
   },
-  // {
-  //   path: '/namespaces/:namespace/' + Paths.ACCESS + '/:app',
-  //   component: AccessListPageDetails
-  // },
+  {
+    path: '/namespaces/:namespace/' + Paths.ACCESS + '/:app',
+    component: AccessListComponent
+  },
   {
     path: '/namespaces/:namespace/' + Paths.WORKLOADS + '/:workload',
     component: WorkloadDetailsPage

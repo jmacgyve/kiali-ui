@@ -7,7 +7,7 @@ import { hasMissingSidecar, IstioTypes, Renderer, Resource, TResource } from './
 import { DisplayMode, HealthIndicator } from '../Health/HealthIndicator';
 import { ValidationObjectSummary } from '../Validations/ValidationObjectSummary';
 import { WorkloadListItem } from '../../types/Workload';
-import { dicIstioType, IstioConfigItem } from '../../types/IstioConfigList';
+import { dicIstioType, IstioConfigItem, IstioConfigItemAccess } from '../../types/IstioConfigList';
 import { AppListItem } from '../../types/AppList';
 import { ServiceListItem } from '../../types/ServiceList';
 import { ApiTypeIndicator } from '../ApiDocumentation/ApiTypeIndicator';
@@ -75,9 +75,9 @@ export const item: Renderer<TResource> = (item: TResource, config: Resource, ico
   );
 };
 
-export const accessItem: Renderer<TResource> = (item: TResource) => {
+export const accessItem: Renderer<IstioConfigItemAccess> = (item: IstioConfigItemAccess) => {
   return (
-    <td role="gridcell" key={'VirtuaItem_Name_' + item.namespace + '_' + item.name}>
+    <td role="gridcell" key={'VirtuaItem_Name_' + item.namespace + '_' + item.type}>
       {item.name}
     </td>
   );
@@ -93,16 +93,14 @@ export const istioType: Renderer<IstioConfigItem> = (item: IstioConfigItem) => {
   );
 };
 
-export const accessNamespace: Renderer<IstioConfigItem> = (item: IstioConfigItem) => {
-  const type = item.name;
-  if (type === 'servicerole' || type === 'servicerolebinding') {
-    return (
-      <td role="gridcell" key={'VirtuaItem_Namespace_' + item.namespace + '_' + item.name}>
-        {item.namespace}
-      </td>
-    );
-  }
-  return;
+export const istioTypeAccess: Renderer<IstioConfigItemAccess> = (item: IstioConfigItemAccess) => {
+  const type = item.type;
+  const object = IstioTypes[type];
+  return (
+    <td role="gridcell" key={'VirtuaItem_IstioType_' + item.namespace + '_' + item.name}>
+      {object.name}
+    </td>
+  );
 };
 
 export const namespace: Renderer<TResource> = (item: TResource) => {
@@ -172,18 +170,6 @@ export const configuration: Renderer<ServiceListItem | IstioConfigItem> = (
       ) : (
         <>N/A</>
       )}
-    </td>
-  );
-};
-
-//новый класс для проверки таблицы во вкладке Istio Config
-//TODO убрать этот класс
-export const configuration2: Renderer<ServiceListItem | IstioConfigItem> = (
-  item: ServiceListItem | IstioConfigItem
-) => {
-  return (
-    <td role="gridcell" key={'VirtuaItem_Conf_' + item.namespace + '_' + item.name}>
-      validation : (<>CheckNewconfiguration2</>)
     </td>
   );
 };
