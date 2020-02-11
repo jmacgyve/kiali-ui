@@ -4,20 +4,13 @@ import { sortable } from '@patternfly/react-table';
 import { AppListItem } from '../../types/AppList';
 import { WorkloadListItem } from '../../types/Workload';
 import { ServiceListItem } from '../../types/ServiceList';
-import { IstioConfigItem } from '../../types/IstioConfigList';
+import { IstioConfigItem, IstioConfigItemAccess } from '../../types/IstioConfigList';
 import * as Renderers from './Renderers';
 import { Health } from '../../types/Health';
 import { isIstioNamespace } from 'config/ServerConfig';
-import { AccessRuleConstraint, ClusterRbacConfigSpec, K8sMetadata, Reference } from '../../types/IstioObjects';
 
 export type SortResource = AppListItem | WorkloadListItem | ServiceListItem;
-export type TResource =
-  | SortResource
-  | IstioConfigItem
-  | Reference
-  | AccessRuleConstraint
-  | ClusterRbacConfigSpec
-  | K8sMetadata;
+export type TResource = SortResource | IstioConfigItem;
 export type Renderer<R extends TResource> = (
   item: R,
   config: Resource,
@@ -66,7 +59,7 @@ const istioItem: ResourceType<IstioConfigItem> = {
   renderer: Renderers.item
 };
 
-const accessItem: ResourceType<IstioConfigItem> = {
+const accessItem: ResourceType<IstioConfigItemAccess> = {
   name: 'Item',
   param: 'in',
   column: 'Name',
@@ -130,6 +123,14 @@ const istioType: ResourceType<IstioConfigItem> = {
   renderer: Renderers.istioType
 };
 
+const istioTypeAccess: ResourceType<IstioConfigItemAccess> = {
+  name: 'IstioTypeAccess',
+  param: 'it',
+  column: 'Type',
+  transforms: [sortable],
+  renderer: Renderers.istioTypeAccess
+};
+
 export const IstioTypes = {
   gateway: { name: 'Gateway', url: 'gateways', icon: 'G' },
   hellostring: { name: 'HelloString', url: 'helloString', icon: 'HHH' },
@@ -160,16 +161,6 @@ export type Resource = {
   icon?: string;
 };
 
-//новый класс для проверки таблицы во вкладке Istio Config
-//TODO убрать этот класс
-const configuration2: ResourceType<ServiceListItem | IstioConfigItem> = {
-  name: 'Configuration2',
-  param: 'cv2',
-  column: 'Configuration2',
-  transforms: [sortable],
-  renderer: Renderers.configuration2
-};
-
 const workloads: Resource = {
   name: 'workloads',
   columns: [item, namespace, workloadType, health, details, labelValidation],
@@ -184,20 +175,18 @@ const applications: Resource = {
 
 const services: Resource = {
   name: 'services',
-  // columns: [serviceItem, namespace, health, details],
-  columns: [serviceItem, namespace, health, details, configuration],
+  columns: [serviceItem, namespace, health, details],
   icon: 'S'
 };
 
 const istio: Resource = {
   name: 'istio',
-  columns: [istioItem, namespace, istioType, configuration2]
-  //columns: [istioItem, namespace, istioType, configuration]
+  columns: [istioItem, namespace, istioType, configuration]
 };
 
 const access: Resource = {
   name: 'access',
-  columns: [accessItem, namespace, istioType]
+  columns: [accessItem, namespace, istioTypeAccess]
 };
 
 const conf = {

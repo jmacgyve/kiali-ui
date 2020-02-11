@@ -5,11 +5,11 @@ import { ActiveFilter } from '../../types/Filters';
 import * as API from '../../services/Api';
 import Namespace from '../../types/Namespace';
 import {
-  dicIstioType,
-  filterByConfigValidation,
-  filterByName,
-  IstioConfigItem,
-  toIstioItems
+  dicIstioTypeAccess,
+  filterByConfigValidationAccess,
+  filterByNameAccess,
+  IstioConfigItemAccess,
+  toIstioItemsAccess
 } from '../../types/IstioConfigList';
 import { PromisesRegistry } from '../../utils/CancelablePromises';
 import * as IstioConfigListFilters from './FiltersAndSorts';
@@ -24,15 +24,15 @@ import { VirtualList } from '../../components/VirtualList/VirtualList';
 import { showInMessageCenter } from '../../utils/IstioValidationUtils';
 import { ObjectValidation } from '../../types/IstioObjects';
 
-interface IstioConfigListComponentState extends FilterComponent.State<IstioConfigItem> {}
-interface IstioConfigListComponentProps extends FilterComponent.Props<IstioConfigItem> {
+interface IstioConfigListComponentState extends FilterComponent.State<IstioConfigItemAccess> {}
+interface IstioConfigListComponentProps extends FilterComponent.Props<IstioConfigItemAccess> {
   activeNamespaces: Namespace[];
 }
 
 class AccessListComponent extends FilterComponent.Component<
   IstioConfigListComponentProps,
   IstioConfigListComponentState,
-  IstioConfigItem
+  IstioConfigItemAccess
 > {
   private promises = new PromisesRegistry();
 
@@ -78,7 +78,7 @@ class AccessListComponent extends FilterComponent.Component<
     return [paramsSynced, activeNamespacesCompare];
   };
 
-  sortItemList(apps: IstioConfigItem[], sortField: SortField<IstioConfigItem>, isAscending: boolean) {
+  sortItemList(apps: IstioConfigItemAccess[], sortField: SortField<IstioConfigItemAccess>, isAscending: boolean) {
     return IstioConfigListFilters.sortIstioItems(apps, sortField, isAscending);
   }
 
@@ -88,7 +88,7 @@ class AccessListComponent extends FilterComponent.Component<
     const activeFilters: ActiveFilter[] = FilterSelected.getSelected();
     const namespacesSelected = this.props.activeNamespaces.map(item => item.name);
     const istioTypeFilters = getFilterSelectedValues(IstioConfigListFilters.istioTypeFilter, activeFilters).map(
-      value => dicIstioType[value]
+      value => dicIstioTypeAccess[value]
     );
     const istioNameFilters = getFilterSelectedValues(IstioConfigListFilters.istioNameFilter, activeFilters);
     const configValidationFilters = getFilterSelectedValues(
@@ -138,7 +138,7 @@ class AccessListComponent extends FilterComponent.Component<
       .then(items =>
         IstioConfigListFilters.sortIstioItems(items, this.state.currentSortField, this.state.isSortAscending)
       )
-      .then(configItems => filterByConfigValidation(configItems, configValidationFilters))
+      .then(configItems => filterByConfigValidationAccess(configItems, configValidationFilters))
       .then(sorted => {
         // Update the view when data is fetched
         this.setState({
@@ -148,7 +148,7 @@ class AccessListComponent extends FilterComponent.Component<
       .catch(istioError => {
         console.log(istioError);
         if (!istioError.isCanceled) {
-          this.handleAxiosError('Could not fetch Istio objects list', istioError);
+          this.handleAxiosError('Could not fetch Istio objects list wrom wrom check errors', istioError);
         }
       });
   }
@@ -158,9 +158,9 @@ class AccessListComponent extends FilterComponent.Component<
     return this.promises
       .registerAll('configs', namespaces.map(ns => API.getIstioConfig(ns, typeFilters, true)))
       .then(responses => {
-        let istioItems: IstioConfigItem[] = [];
+        let istioItems: IstioConfigItemAccess[] = [];
         responses.forEach(response => {
-          istioItems = istioItems.concat(toIstioItems(filterByName(response.data, istioNameFilters)));
+          istioItems = istioItems.concat(toIstioItemsAccess(filterByNameAccess(response.data, istioNameFilters)));
         });
         return istioItems;
       });
