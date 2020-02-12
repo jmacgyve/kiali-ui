@@ -78,7 +78,7 @@ export const item: Renderer<TResource> = (item: TResource, config: Resource, ico
 export const accessItem: Renderer<IstioConfigItemAccess> = (item: IstioConfigItemAccess) => {
   return (
     <td role="gridcell" key={'VirtuaItem_Name_' + item.namespace + '_' + item.type}>
-      {item.name}
+      {item.type === 'meshpolicy' ? `` : item.name}
     </td>
   );
 };
@@ -98,7 +98,7 @@ export const istioTypeAccess: Renderer<IstioConfigItemAccess> = (item: IstioConf
   const object = IstioTypes[type];
   return (
     <td role="gridcell" key={'VirtuaItem_IstioType_' + item.namespace + '_' + item.name}>
-      {object.name}
+      {type === 'meshpolicy' ? `` : object.name}
     </td>
   );
 };
@@ -110,6 +110,14 @@ export const namespace: Renderer<TResource> = (item: TResource) => {
         <Badge className={'virtualitem_badge_definition'}>NS</Badge>
       </Tooltip>
       {item.namespace}
+    </td>
+  );
+};
+
+export const namespaceAccess: Renderer<IstioConfigItemAccess> = (item: IstioConfigItemAccess) => {
+  return (
+    <td role="gridcell" key={'VirtuaItem_Namespace_' + item.namespace + '_' + item.name}>
+      {item.type === 'meshpolicy' ? `` : item.namespace}
     </td>
   );
 };

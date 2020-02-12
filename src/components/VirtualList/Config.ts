@@ -75,6 +75,14 @@ const namespace: ResourceType<TResource> = {
   renderer: Renderers.namespace
 };
 
+const namespaceAccess: ResourceType<IstioConfigItemAccess> = {
+  name: 'NamespaceAccess',
+  param: 'ns',
+  column: 'Namespace',
+  transforms: [sortable],
+  renderer: Renderers.namespaceAccess
+};
+
 const health: ResourceType<TResource> = {
   name: 'Health',
   param: 'he',
@@ -186,7 +194,7 @@ const istio: Resource = {
 
 const access: Resource = {
   name: 'access',
-  columns: [accessItem, namespace, istioTypeAccess]
+  columns: [accessItem, namespaceAccess, istioTypeAccess]
 };
 
 const conf = {

@@ -136,10 +136,25 @@ export const dicIstioType = {
 };
 
 export const dicIstioTypeAccess = {
-  // ServiceRole: 'serviceroles',
-  // ServiceRoleBinding: 'servicerolebindings',
-  // serviceroles: 'ServiceRole',
-  // servicerolebindings: 'ServiceRoleBinding',
+  Sidecar: 'sidecars',
+  Gateway: 'gateways',
+  VirtualService: 'virtualservices',
+  DestinationRule: 'destinationrules',
+  ServiceEntry: 'serviceentries',
+  Rule: 'rules',
+  Adapter: 'adapters',
+  Template: 'templates',
+  QuotaSpec: 'quotaspecs',
+  QuotaSpecBinding: 'quotaspecbindings',
+  Policy: 'policies',
+  MeshPolicy: 'meshpolicies',
+  ClusterRbacConfig: 'clusterrbacconfigs',
+  RbacConfig: 'rbacconfigs',
+  AuthorizationPolicy: 'authorizationpolicies',
+  ServiceRole: 'serviceroles',
+  ServiceRoleBinding: 'servicerolebindings',
+  ServiceMeshPolicy: 'servicemeshpolicies',
+  ServiceMeshRbacConfig: 'servicemeshrbacconfigs',
   gateways: 'Gateway',
   virtualservices: 'VirtualService',
   destinationrules: 'DestinationRule',
@@ -360,7 +375,7 @@ export const toIstioItemsAccess = (istioConfigListAccess: IstioConfigListAccess)
 
   Object.keys(istioConfigListAccess).forEach(field => {
     if (nonItems.indexOf(field) > -1) {
-      // These items do not belong to the IstioConfigItem[]
+      // These items do not belong to the istioConfigListAccess[]
       return;
     }
 
