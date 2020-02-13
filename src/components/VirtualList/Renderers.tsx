@@ -103,6 +103,14 @@ export const istioTypeAccess: Renderer<IstioConfigItemAccess> = (item: IstioConf
   );
 };
 
+export const whatCanUDo: Renderer<IstioConfigItemAccess> = (item: IstioConfigItemAccess) => {
+  return (
+    <td role="gridcell" key={'VirtuaItem_IstioType_' + item.namespace + '_' + item.name}>
+      {item.type === 'meshpolicy' ? `` : item.time}
+    </td>
+  );
+};
+
 export const namespace: Renderer<TResource> = (item: TResource) => {
   return (
     <td role="gridcell" key={'VirtuaItem_Namespace_' + item.namespace + '_' + item.name}>

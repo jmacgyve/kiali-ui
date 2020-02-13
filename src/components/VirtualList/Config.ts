@@ -139,6 +139,14 @@ const istioTypeAccess: ResourceType<IstioConfigItemAccess> = {
   renderer: Renderers.istioTypeAccess
 };
 
+const whatCanUDo: ResourceType<IstioConfigItemAccess> = {
+  name: 'IstioTypeAccess',
+  param: 'it',
+  column: 'WhatCanUDo',
+  transforms: [sortable],
+  renderer: Renderers.whatCanUDo
+};
+
 export const IstioTypes = {
   gateway: { name: 'Gateway', url: 'gateways', icon: 'G' },
   hellostring: { name: 'HelloString', url: 'helloString', icon: 'HHH' },
@@ -194,7 +202,7 @@ const istio: Resource = {
 
 const access: Resource = {
   name: 'access',
-  columns: [accessItem, namespaceAccess, istioTypeAccess]
+  columns: [accessItem, namespaceAccess, istioTypeAccess, whatCanUDo]
 };
 
 const conf = {

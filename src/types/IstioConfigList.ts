@@ -51,6 +51,7 @@ export interface IstioConfigItem {
 }
 
 export interface IstioConfigItemAccess {
+  time: string;
   namespace: string;
   type: string;
   name: string;
@@ -386,15 +387,15 @@ export const toIstioItemsAccess = (istioConfigListAccess: IstioConfigListAccess)
     let entries = istioConfigListAccess[field];
     if (!(entries instanceof Array)) {
       // VirtualServices, DestinationRules
-      // entries = entries.items;
       return;
     }
 
     entries.forEach(entry => {
       const item = {
-        namespace: istioConfigListAccess.namespace.name,
+        namespace: entry.metadata.namespace,
         type: typeName,
         name: entry.metadata.name,
+        time: entry.metadata.creationTimestamp,
         validation: hasValidations(typeName, entry.metadata.name)
           ? istioConfigListAccess.validations[typeName][entry.metadata.name]
           : undefined
