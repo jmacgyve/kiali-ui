@@ -5,7 +5,7 @@ import Namespace from '../types/Namespace';
 import { IstioMetricsOptions } from '../types/MetricsOptions';
 import { Metrics } from '../types/Metrics';
 import { IstioConfigDetails } from '../types/IstioConfigDetails';
-import { IstioConfigList } from '../types/IstioConfigList';
+import { IstioConfigList, IstioConfigListAccess } from '../types/IstioConfigList';
 import { Workload, WorkloadNamespaceResponse } from '../types/Workload';
 import { ServiceDetailsInfo } from '../types/ServiceInfo';
 import JaegerInfo from '../types/JaegerInfo';
@@ -134,6 +134,14 @@ export const getIstioConfig = (namespace: string, objects: string[], validate: b
     params.validate = validate;
   }
   return newRequest<IstioConfigList>(HTTP_VERBS.GET, urls.istioConfig(namespace), params, {});
+};
+
+export const getIstioConfigAccess = (namespace: string, objects: string[], validate: boolean) => {
+  const params: any = objects && objects.length > 0 ? { objects: objects.join(',') } : {};
+  if (validate) {
+    params.validate = validate;
+  }
+  return newRequest<IstioConfigListAccess>(HTTP_VERBS.GET, urls.istioConfig(namespace), params, {});
 };
 
 export const getIstioConfigDetail = (namespace: string, objectType: string, object: string, validate: boolean) => {

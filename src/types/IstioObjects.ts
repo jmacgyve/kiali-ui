@@ -1,6 +1,5 @@
 import Namespace from './Namespace';
 import { ResourcePermissions } from './Permissions';
-import { ServiceHealth } from './Health';
 
 // Common types
 
@@ -44,6 +43,13 @@ export interface IstioObject {
   metadata: K8sMetadata;
 }
 
+export interface IstioObjectForAccess {
+  kind?: string;
+  apiVersion?: string;
+  metadata: K8sMetadata;
+  spec: AccessRules;
+}
+
 // validations are grouped per 'objectType' first in the first map and 'name' in the inner map
 export type Validations = { [key1: string]: { [key2: string]: ObjectValidation } };
 
@@ -74,16 +80,13 @@ export interface ObjectReference {
 }
 
 export interface Reference {
-  healthPromise: Promise<ServiceHealth>;
-  istioSidecar: boolean;
-  namespace: string;
-  type: string;
   name: string;
   kind: string;
 }
 
 export interface ValidationStatus {
   errors: number;
+  objectCount?: number;
   warnings: number;
 }
 
@@ -415,8 +418,8 @@ export interface WorkloadSelector {
 
 export interface SidecarSpec {
   workloadSelector?: WorkloadSelector;
-  ingress?: IstioIngressListener;
-  egress?: IstioEgressListener;
+  ingress?: IstioIngressListener[];
+  egress?: IstioEgressListener[];
 }
 
 export interface Sidecar extends IstioObject {
@@ -590,9 +593,6 @@ export interface ServiceMeshRbacConfig extends IstioObject {
 }
 
 export interface ClusterRbacConfigSpec {
-  namespace: string;
-  type: string;
-  name: string;
   mode?: string;
   inclusion?: ClusterRbacConfigTarget;
   exclusion?: ClusterRbacConfigTarget;
@@ -608,9 +608,6 @@ export interface RbacConfig extends IstioObject {
 }
 
 export interface RbacConfigSpec {
-  namespace: string;
-  type: string;
-  name: string;
   mode?: string;
   inclusion?: RbacConfigTarget;
   exclusion?: RbacConfigTarget;
@@ -676,15 +673,9 @@ export interface AccessRules {
   path: string[];
   methods: string[];
   constraints: AccessRuleConstraint;
-  namespace: string;
-  type: string;
-  name: string;
 }
 
 export interface AccessRuleConstraint {
-  type: string;
-  name: string;
-  namespace: string;
   key: string;
   values: string[];
 }
@@ -694,17 +685,11 @@ export interface ServiceRoleBinding extends IstioObject {
 }
 
 export interface ServiceRoleBindingSpec {
-  namespace: string;
-  type: string;
-  name: string;
   subjects?: ServiceRoleBindingSubject[];
   roleRef?: Reference;
 }
 
 export interface ServiceRoleBindingSubject {
-  namespace: string;
-  type: string;
-  name: string;
   user: string;
   properties: Map<string, string>;
 }

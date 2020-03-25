@@ -51,10 +51,12 @@ export interface IstioConfigItem {
 }
 
 export interface IstioConfigItemAccess {
+  time: string;
   namespace: string;
   type: string;
   name: string;
   serviceRole?: ServiceRole;
+  authorizationPolicy?: AuthorizationPolicy;
   serviceRoleBinding?: ServiceRoleBinding;
   validation?: ObjectValidation;
 }
@@ -229,7 +231,7 @@ export const filterByNameAccess = (unfiltered: IstioConfigListAccess, names: str
   }
   return {
     namespace: unfiltered.namespace,
-    serviceRoles: unfiltered.serviceRoles.filter(sr => includeName(sr.metadata.name, names)),
+    serviceRoles: unfiltered.serviceRoles,
     serviceRoleBindings: unfiltered.serviceRoleBindings.filter(srb => includeName(srb.metadata.name, names)),
     validations: unfiltered.validations
   };
@@ -366,7 +368,6 @@ export const toIstioItemsAccess = (istioConfigListAccess: IstioConfigListAccess)
     'meshpolicies',
     'clusterrbacconfigs',
     'rbacconfigs',
-    'authorizationpolicies',
     'sidecars',
     'servicemeshpolicies',
     'servicemeshrbacconfigs',
@@ -386,24 +387,53 @@ export const toIstioItemsAccess = (istioConfigListAccess: IstioConfigListAccess)
     let entries = istioConfigListAccess[field];
     if (!(entries instanceof Array)) {
       // VirtualServices, DestinationRules
-      // entries = entries.items;
       return;
     }
 
     entries.forEach(entry => {
-      const item = {
-        namespace: istioConfigListAccess.namespace.name,
-        type: typeName,
-        name: entry.metadata.name,
-        validation: hasValidations(typeName, entry.metadata.name)
-          ? istioConfigListAccess.validations[typeName][entry.metadata.name]
-          : undefined
-      };
-
-      item[entryName] = entry;
-      istioItems.push(item);
+      if (entry.kind === 'ServiceRole') {
+        const item = {
+          namespace: entry.metadata.namespace,
+          type: typeName,
+          name: entry.metadata.name,
+          //time: entry.spec.rules.map(word => word[0].toUpperCase() + word.substring(1)).join(','),
+          time: istioConfigListAccess.namespace.name,
+          // time: entry.serviceRole.spec.rules.join(','),
+          //time: entry.serviceRole.spec.rules.map(rules => rules.methods.join(',')),
+          validation: hasValidations(typeName, entry.metadata.name)
+            ? istioConfigListAccess.validations[typeName][entry.metadata.name]
+            : undefined
+        };
+        console.log(item);
+        item[entryName] = entry;
+        istioItems.push(item);
+      } else if (entry.kind === 'ServiceRoleBinding') {
+        const item = {
+          namespace: entry.metadata.namespace,
+          type: typeName,
+          name: entry.metadata.name,
+          time: entry.metadata.creationTimestamp,
+          //time: entry.spec.rules.methods.join(),
+          validation: hasValidations(typeName, entry.metadata.name)
+            ? istioConfigListAccess.validations[typeName][entry.metadata.name]
+            : undefined
+        };
+        item[entryName] = entry;
+        istioItems.push(item);
+      } else if (entry.kind === 'AuthorizationPolicy') {
+        const item = {
+          namespace: entry.metadata.namespace,
+          type: typeName,
+          name: entry.metadata.name,
+          time: entry.metadata.uid,
+          validation: hasValidations(typeName, entry.metadata.name)
+            ? istioConfigListAccess.validations[typeName][entry.metadata.name]
+            : undefined
+        };
+        item[entryName] = entry;
+        istioItems.push(item);
+      }
     });
   });
-
   return istioItems;
 };
