@@ -43,6 +43,13 @@ export interface IstioObject {
   metadata: K8sMetadata;
 }
 
+export interface IstioObjectForAccess {
+  kind?: string;
+  apiVersion?: string;
+  metadata: K8sMetadata;
+  spec: AccessRules;
+}
+
 // validations are grouped per 'objectType' first in the first map and 'name' in the inner map
 export type Validations = { [key1: string]: { [key2: string]: ObjectValidation } };
 

@@ -93,6 +93,10 @@ export const istioTypeFilter: FilterType = {
     {
       id: 'ServiceRoleBinding',
       title: 'ServiceRoleBinding'
+    },
+    {
+      id: 'AuthorizationPolicy',
+      title: 'AuthorizationPolicy'
     }
   ]
 };
